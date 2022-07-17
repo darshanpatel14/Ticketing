@@ -1,12 +1,15 @@
-const LandingPage = () => {
-  return (
-    <div>
-      <h1>Landing Page</h1>
-    </div>
+import buildClient from "../api/build-client";
+const LandingPage = ({ currentUser }) => {
+  return currentUser ? (
+    <h1>You are signed in</h1>
+  ) : (
+    <h1>You are not signed in</h1>
   );
 };
 
-LandingPage.getInitialProps = () => {
-  console.log("i am on server");
-  return { color: "red" };
+LandingPage.getInitialProps = async (req) => {
+  const { data } = await buildClient(req).get("/api/users/currentUser");
+  return data;
 };
+
+export default LandingPage;
