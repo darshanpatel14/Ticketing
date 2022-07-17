@@ -1,11 +1,8 @@
 import express, { Request, Response } from "express";
 import { body, validationResult } from "express-validator";
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
 import { User } from "../models/user";
-import { RequestValidationError } from "../errors/request-validation-error";
-import { DatabaseConnectionError } from "../errors/database-connection-error";
-import { BadRequestError } from "../errors/bad-request-error";
-import { validateRequest } from '../middlewares/validate-request';
+import { BadRequestError, validateRequest } from "@darshantkt/common";
 const router = express.Router();
 
 router.post(
@@ -16,27 +13,31 @@ router.post(
       .trim()
       .isLength({ min: 4, max: 20 })
       .withMessage("Password Must Be Between 4 and 20 Characters"),
-  ], validateRequest,
+  ],
+  validateRequest,
   async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      throw new BadRequestError('Email in Use');
+      throw new BadRequestError("Email in Use");
     }
 
     const user = User.build({ email, password });
     await user.save();
 
     //Generate jsonwebtoken
-    const userJwt = jwt.sign({
-      id: user.id,
-      email: user.email
-    }, process.env.JWT_KEY!)
+    const userJwt = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      process.env.JWT_KEY!
+    );
 
     req.session = {
-      jwt: userJwt
+      jwt: userJwt,
     };
 
     res.status(201).send(user);
